@@ -1,5 +1,6 @@
 package company.kr.sand.registration;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -12,6 +13,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.facebook.*;
@@ -24,21 +26,22 @@ import org.json.JSONObject;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserFactory;
 
-import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
+import java.io.DataOutputStream;
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.ProtocolException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 
 import company.kr.sand.R;
-import company.kr.sand.rsibal.MainActivity;
+import company.kr.sand.views.MainActivity;
 
 /**
  * Created by Prattler on 2015-10-27.
@@ -47,22 +50,21 @@ import company.kr.sand.rsibal.MainActivity;
 public class LoginActivity extends FragmentActivity {
 
     //request code
-    public static final int CONNECTION_WITH_NAVER = 0;
-    public static final int CONNECTION_WITH_FACEBOOK = 1;
+    public static final int CONNECTION_WITH_LOGIN = 0;
     public static final int CONNECTION_FOR_REDUNDANCY_CHECK = 2;
     public static final int REG_COMPLETE = 3;
 
     //result string
-    public static final String ACCOUNT_NOT_EXIST = "account_not_exist";
-    public static final String ACCOUNT_EXIST = "account_exist";
-    public static final String NICK_NOT_EXIST = "nick_not_exist";
-    public static final String NICK_EXIST = "nick_exist";
+    public static final String ACCOUNT_NOT_EXIST = "account_not_exist ";
+    public static final String ACCOUNT_EXIST = "account_exist ";
+    public static final String NICK_NOT_EXIST = "nick_not_exist ";
+    public static final String NICK_EXIST = "nick_exist ";
     public static final String PERFECT = "perfect";
 
     //redundancy check
     public static boolean REDUNDANCY_CHECK = false;
 
-
+    private ImageView img_egg;
     private String str_nick;
     private Context mContext; //application context
 
@@ -70,12 +72,15 @@ public class LoginActivity extends FragmentActivity {
     private LoginManager loginManager; //facebook login management
     private OAuthLogin mOAuthLoginInstance; //naver login subject
     private OAuthLoginHandler mOAuthLoginHandler; //naver login management
-    private NaverUserInfo naverUserInfo; //naver user profile info
-    private FacebookUserInfo facebookUserInfo; //facebook user profile info
+    private UserInfo userInfo;
     private HttpURLConnection httpURLConnection;
     private ImageRegFragment fg_img;
     private LoginFragment fg_login;
     private NickRegFragment fg_nick;
+    private InputStream is;
+    private OutputStream os;
+    private BufferedWriter bw;
+    private BufferedReader br;
 
     private FragmentManager.OnBackStackChangedListener backStackListener;
 
@@ -102,7 +107,7 @@ public class LoginActivity extends FragmentActivity {
 
                     FacebookSdk.sdkInitialize(mContext);
                     callbackManager = CallbackManager.Factory.create();
-                    facebookUserInfo = new FacebookUserInfo();
+                    userInfo = new UserInfo();
                     facebookLoginInit();
 
                     // naver
@@ -110,10 +115,21 @@ public class LoginActivity extends FragmentActivity {
                     mOAuthLoginInstance.init(mContext, getResources().getString(company.kr.sand.R.string.naver_app_id),
                             getResources().getString(company.kr.sand.R.string.naver_app_secret), getResources().getString(R.string.app_name));
 
-                    naverUserInfo = new NaverUserInfo();
+
                     naverLoginPrecessInit();
 
                     REDUNDANCY_CHECK = false;
+
+                    img_egg=(ImageView)findViewById(R.id.img_egg);
+                    img_egg.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+
+                            System.out.println("onclick");
+                            fuckingMento("1");
+                        }
+                    });
+
 
 
                 } else if (name == "nick_frag") {
@@ -152,11 +168,7 @@ public class LoginActivity extends FragmentActivity {
 
                             } else {
 
-
-                                REDUNDANCY_CHECK = true;
-                                //connectWithServer(CONNECTION_FOR_REDUNDANCY_CHECK);
-
-                                Toast.makeText(mContext, "사용가능한 닉네임", Toast.LENGTH_SHORT).show();
+                                interactionWithWebServer(CONNECTION_FOR_REDUNDANCY_CHECK);
                             }
 
                         }
@@ -171,13 +183,7 @@ public class LoginActivity extends FragmentActivity {
                         @Override
                         public void onClick(View v) {
 
-                            //connectWithServer(REG_COMPLETE);
-                            Toast.makeText(mContext, "가입완료", Toast.LENGTH_SHORT).show();
-
-                            //명환 코드로 이동
-                            Intent it_next = new Intent(LoginActivity.this, MainActivity.class);
-                            startActivity(it_next);
-                            finish();
+                            interactionWithWebServer(REG_COMPLETE);
                         }
                     });
 
@@ -195,7 +201,7 @@ public class LoginActivity extends FragmentActivity {
 
         callbackManager.onActivityResult(requestCode, resultCode, data);
         fg_img.onActivityResult(requestCode, resultCode, data);
-        System.out.println(requestCode);
+
     }
 
     @Override
@@ -212,13 +218,14 @@ public class LoginActivity extends FragmentActivity {
         setBackStackListener();
         setFragment(0);
 
+
     }
 
     private void setFragment(int kind) {
 
         FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
 
-        System.out.println("asdfasfd");
+
         switch (kind) {
 
             case 0:
@@ -230,11 +237,9 @@ public class LoginActivity extends FragmentActivity {
                 break;
             case 1:
 
-
                 ft.replace(R.id.fragment_container, fg_nick);
                 ft.addToBackStack("nick_frag");
                 ft.commit();
-
 
                 break;
             case 2:
@@ -267,29 +272,19 @@ public class LoginActivity extends FragmentActivity {
                                         // Application code
 
                                         try {
-                                            facebookUserInfo.id = object.getString("id");
-                                            facebookUserInfo.age_range = object.getString("age_range");
-                                            facebookUserInfo.email = object.getString("email");
-                                            facebookUserInfo.gender = object.getString("gender");
-                                            facebookUserInfo.name = object.getString("name");
-                                            facebookUserInfo.last_name = object.getString("last_name");
-                                            facebookUserInfo.first_name = object.getString("first_name");
-                                            facebookUserInfo.link = object.getString("link");
-                                            facebookUserInfo.locale = object.getString("locale");
-                                            facebookUserInfo.updated_time = object.getString("updated_time");
-                                            facebookUserInfo.timezone = object.getString("timezone");
-                                            facebookUserInfo.verified = object.getString("verified");
+                                            userInfo.id = object.getString("id");
+                                            userInfo.age_range = object.getString("age_range");
+                                            userInfo.email = object.getString("email");
+                                            userInfo.gender = object.getString("gender");
+                                            userInfo.name = object.getString("name");
 
 
                                         } catch (JSONException e) {
                                             e.printStackTrace();
                                         }
 
-//                                        SharedPreferences mPref = getSharedPreferences("ID", MODE_PRIVATE);
-//                                        SharedPreferences.Editor se = mPref.edit();
-//                                        se.commit();
+                                        interactionWithWebServer(CONNECTION_WITH_LOGIN);
 
-                                        //connectWithServer(1);
 
                                     }
                                 });
@@ -364,16 +359,7 @@ public class LoginActivity extends FragmentActivity {
             @Override
             public void onClick(View v) {
 
-//                mOAuthLoginInstance.logout(mContext);
-//                SharedPreferences mPref = getSharedPreferences("ID", MODE_PRIVATE);
-//                SharedPreferences.Editor se = mPref.edit();
-//                se.remove("Naver");
-//                se.commit();
-
-                setFragment(1);
-                //connectWithServer(1);
-
-                //    mOAuthLoginInstance.startOauthLoginActivity(LoginActivity.this, mOAuthLoginHandler);
+                mOAuthLoginInstance.startOauthLoginActivity(LoginActivity.this, mOAuthLoginHandler);
 
             }
         });
@@ -399,15 +385,7 @@ public class LoginActivity extends FragmentActivity {
 
         protected void onPostExecute(Void content) {
 
-//            SharedPreferences mPref = getSharedPreferences("ID", MODE_PRIVATE);
-//            SharedPreferences.Editor se = mPref.edit();
-//            se.putString("Naver", naverUserInfo.id);
-//            se.commit();
-
-            //connectWithServer(0);
-
-            //서버와 연결이 이루어져 가입화면으로 넘어간다고 가정
-
+            interactionWithWebServer(CONNECTION_WITH_LOGIN);
 
         }
 
@@ -508,15 +486,11 @@ public class LoginActivity extends FragmentActivity {
 
                 }
 
-                naverUserInfo.email = arr_info[0];
-                naverUserInfo.nickname = arr_info[1];
-                naverUserInfo.enc_id = arr_info[2];
-                naverUserInfo.profile_image = arr_info[3];
-                naverUserInfo.age = arr_info[4];
-                naverUserInfo.gender = arr_info[5];
-                naverUserInfo.id = arr_info[6];
-                naverUserInfo.name = arr_info[7];
-                naverUserInfo.birthday = arr_info[8];
+                userInfo.email = arr_info[0];
+                userInfo.age_range = arr_info[4];
+                userInfo.gender = arr_info[5];
+                userInfo.id = arr_info[6];
+                userInfo.name = arr_info[7];
 
 
             } catch (Exception e) {
@@ -527,56 +501,240 @@ public class LoginActivity extends FragmentActivity {
         }
     }
 
-    // our server connection part
-    public void connectWithServer(final int flag) {
+    // our server connection part[
 
-        Thread thr_communication = new Thread() {
+    private void interactionWithWebServer(final int flag) {
+
+        final ProgressDialog progressDialog = new ProgressDialog(mContext);
+        AsyncTask<Void, Void, String> async_interact = new AsyncTask<Void, Void, String>() {
 
             @Override
-            public void run() {
+            protected void onPreExecute() {
+            }
 
+            @Override
+            protected String doInBackground(Void... params) {
+
+                String url = null;
+                URL urlCon = null;
                 String response = null;
-                StringBuffer strBuf = new StringBuffer();
-                String url = "서버 URL 입력 예시) http://localhost:5000/test.py";
-
-                if (flag == CONNECTION_WITH_NAVER) {
-
-
-                    strBuf.append("id=" + naverUserInfo.id);
-                    strBuf.append("&name=" + naverUserInfo.name);
-                    strBuf.append("&gender=" + naverUserInfo.gender);
-                    strBuf.append("&age_range=" + naverUserInfo.age);
-                    strBuf.append("&email=" + naverUserInfo.email);
-                    strBuf.append("&type=" + "login");
-                    strBuf.append("&kind=" + "naver");
-                    //server
-
-
-                } else if (flag == CONNECTION_WITH_FACEBOOK) {
-
-
-                    strBuf.append("id=" + facebookUserInfo.id);
-                    strBuf.append("&name=" + facebookUserInfo.name);
-                    strBuf.append("&gender=" + facebookUserInfo.gender);
-                    strBuf.append("&age_range=" + facebookUserInfo.age_range);
-                    strBuf.append("&email=" + facebookUserInfo.email);
-                    strBuf.append("&type=" + "login");
-                    strBuf.append("&kind=" + "facebook");
-
-
-                } else if (flag == CONNECTION_FOR_REDUNDANCY_CHECK) {
-
-                    strBuf.append("nick=" + str_nick);
-                    strBuf.append("&type=" + "nick_check");
-
-                } else if (flag == REG_COMPLETE) {
-
-                    //완료 메세지 및 이미지 전송
-                }
-
                 try {
 
-                    URL urlCon = new URL(url);
+                    switch (flag) {
+
+                        case CONNECTION_WITH_LOGIN:
+
+                            //학교 ip http://165.194.34.39:98/sandserverside.php
+                            //집 ip http://192.168.35.197:80/sandserverside.php
+
+
+                            url = "http://prattler.azurewebsites.net/sandserverside.php";
+                            urlCon = new URL(url);
+                            httpURLConnection = (HttpURLConnection) urlCon.openConnection();
+
+                            if (httpURLConnection != null) {
+
+                                httpURLConnection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+                                httpURLConnection.setRequestMethod("POST");
+                                httpURLConnection.setDoOutput(true);
+                                httpURLConnection.setDoInput(true);
+                                httpURLConnection.setUseCaches(false);
+                                httpURLConnection.setDefaultUseCaches(false);
+
+                                os = httpURLConnection.getOutputStream();
+                                bw = new BufferedWriter(new OutputStreamWriter(os, "utf-8"));
+
+                                bw.write("id=" + userInfo.id + "&type=login");
+                                bw.flush();
+
+                                is = httpURLConnection.getInputStream();
+                                br = new BufferedReader(new InputStreamReader(is, "utf-8"));
+
+                                response = br.readLine();
+
+
+                            }
+                            break;
+
+                        case CONNECTION_FOR_REDUNDANCY_CHECK:
+
+                            url = "http://prattler.azurewebsites.net/sandserverside.php";
+                            urlCon = new URL(url);
+                            httpURLConnection = (HttpURLConnection) urlCon.openConnection();
+
+                            if (httpURLConnection != null) {
+
+                                httpURLConnection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+                                httpURLConnection.setRequestMethod("POST");
+                                httpURLConnection.setDoOutput(true);
+                                httpURLConnection.setDoInput(true);
+                                httpURLConnection.setUseCaches(false);
+                                httpURLConnection.setDefaultUseCaches(false);
+
+                                os = httpURLConnection.getOutputStream();
+                                bw = new BufferedWriter(new OutputStreamWriter(os, "utf-8"));
+
+                                bw.write("nick=" + str_nick + "&type=nick");
+                                bw.flush();
+
+                                is = httpURLConnection.getInputStream();
+                                br = new BufferedReader(new InputStreamReader(is, "utf-8"));
+
+                                response = br.readLine();
+                            }
+
+
+                            break;
+
+                        case REG_COMPLETE:
+
+                            //multipart방식의 문자열 전송에 문제가 있어 get방식으로 변경
+                            url = "http://prattler.azurewebsites.net/sandserverside2.php?" +
+                                    "id="+userInfo.id+"&name="+URLEncoder.encode(userInfo.name,"utf-8")+"&gender="+userInfo.gender+"&email="+userInfo.email+
+                                    "&age_range="+ userInfo.age_range+"&nick="+URLEncoder.encode(str_nick,"utf-8");
+                            urlCon = new URL(url);
+                            httpURLConnection = (HttpURLConnection) urlCon.openConnection();
+
+                            String boundary = "************";
+                            String twoHyphens = "--";
+                            String lineEnd = "\r\n";
+
+                            if (httpURLConnection != null) {
+
+                                httpURLConnection.setRequestProperty("Connection", "Keep-Alive");
+                                httpURLConnection.setRequestProperty("Content-Type", "multipart/form-data;boundary=" + boundary);
+                                httpURLConnection.setRequestMethod("POST");
+                                httpURLConnection.setDoOutput(true);
+                                httpURLConnection.setDoInput(true);
+                                httpURLConnection.setUseCaches(false);
+                                httpURLConnection.setDefaultUseCaches(false);
+
+                                String fileName = fg_img.getImgPath();
+
+                                DataOutputStream wr = new DataOutputStream(httpURLConnection.getOutputStream());
+
+                                //이미지 작성 부분
+                                if (fileName != null) {
+
+                                    FileInputStream fis = new FileInputStream(fileName);
+                                    int bytesAvailable = fis.available();
+                                    int maxBufferSize = 1024;
+                                    int bufferSize = Math.min(bytesAvailable, maxBufferSize);
+                                    byte[] buffer = new byte[bufferSize];
+
+
+                                    wr.writeBytes(twoHyphens + boundary + lineEnd);
+                                    wr.writeBytes("Content-Disposition: form-data; name=\"uploadedfile\";filename=\"" + fileName + "\"" + lineEnd);
+                                    wr.writeBytes(lineEnd);
+
+                                    int bytesRead = fis.read(buffer, 0, bufferSize);
+                                    while (bytesRead > 0) {
+                                        wr.write(buffer, 0, bufferSize);
+                                        bytesAvailable = fis.available();
+                                        bufferSize = Math.min(bytesAvailable, maxBufferSize);
+                                        bytesRead = fis.read(buffer, 0, bufferSize);
+                                    }
+
+                                    wr.writeBytes(lineEnd);
+
+                                    fis.close();
+                                }
+
+                                //전송의 끝을 알림
+                                wr.writeBytes(twoHyphens + boundary + twoHyphens + lineEnd);
+                                wr.flush();
+                                // 전송 완료 부분
+
+                                is = httpURLConnection.getInputStream();
+                                br = new BufferedReader(new InputStreamReader(is, "utf-8"));
+
+                                response = br.readLine();
+
+
+                            }
+
+
+                            break;
+                    }
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+
+                return response;
+            }
+
+            @Override
+            protected void onPostExecute(String res) {
+
+                System.out.println(res);
+
+                if (res.equals(ACCOUNT_NOT_EXIST)) setFragment(1);
+
+                if(res.equals(ACCOUNT_EXIST)){
+
+                    Toast.makeText(mContext, "가입된  계정", Toast.LENGTH_SHORT).show();
+                    Intent it_next = new Intent(LoginActivity.this, MainActivity.class);
+                    startActivity(it_next);
+                    finish();
+
+                }
+
+                if (res.equals(NICK_NOT_EXIST)) {
+                    Toast.makeText(mContext, "사용가능한 닉네임", Toast.LENGTH_SHORT).show();
+                    REDUNDANCY_CHECK = true;
+                }
+
+                if (res.equals(PERFECT)) {
+
+                    Toast.makeText(mContext, "가입완료", Toast.LENGTH_SHORT).show();
+
+                    SharedPreferences mPref = getSharedPreferences("ID", MODE_PRIVATE);
+                    SharedPreferences.Editor se=mPref.edit();
+                    se.putString("remain",userInfo.id);
+                    se.commit();
+
+                    //명환 코드로 이동
+                    Intent it_next = new Intent(LoginActivity.this, MainActivity.class);
+                    startActivity(it_next);
+                    finish();
+                }
+
+            }
+        };
+
+        async_interact.execute();
+    }
+
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+
+    }
+
+    private void fuckingMento(final String admin) {
+
+        final ProgressDialog progressDialog = new ProgressDialog(mContext);
+        AsyncTask<Void, Void, String> async_interact = new AsyncTask<Void, Void, String>() {
+
+            @Override
+            protected void onPreExecute() {
+            }
+
+            @Override
+            protected String doInBackground(Void... params) {
+
+                String url = null;
+                URL urlCon = null;
+                String response = null;
+
+                try{
+
+                    url = "http://prattler.azurewebsites.net/sandserverside.php";
+                    urlCon = new URL(url);
                     httpURLConnection = (HttpURLConnection) urlCon.openConnection();
 
                     if (httpURLConnection != null) {
@@ -588,40 +746,42 @@ public class LoginActivity extends FragmentActivity {
                         httpURLConnection.setUseCaches(false);
                         httpURLConnection.setDefaultUseCaches(false);
 
-                        OutputStream os = new BufferedOutputStream(httpURLConnection.getOutputStream());
-                        os.write(strBuf.toString().getBytes("UTF-8"));
+                        os = httpURLConnection.getOutputStream();
+                        bw = new BufferedWriter(new OutputStreamWriter(os, "utf-8"));
 
-                        InputStreamReader isr = new InputStreamReader(httpURLConnection.getInputStream(), "UTF-8");
-                        BufferedReader br = new BufferedReader(isr);
+                        bw.write("id=1&type=login");
+                        bw.flush();
+
+                        is = httpURLConnection.getInputStream();
+                        br = new BufferedReader(new InputStreamReader(is, "utf-8"));
+
                         response = br.readLine();
-
-                        httpURLConnection.disconnect();
                     }
 
+                }catch (Exception e){
 
-                } catch (MalformedURLException e) {
-                    e.printStackTrace();
-                } catch (ProtocolException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
                     e.printStackTrace();
                 }
 
 
-                //각 response code에 맞는 string을 읽어 왔을때의 처리
+                return response;
+            }
 
+            @Override
+            protected void onPostExecute(String res) {
+                System.out.println(res);
+                if(res.equals(ACCOUNT_EXIST)){
+
+                    Toast.makeText(mContext, "가입된  계정", Toast.LENGTH_SHORT).show();
+                    Intent it_next = new Intent(LoginActivity.this, MainActivity.class);
+                    startActivity(it_next);
+                    finish();
+
+                }
             }
         };
 
-
-        thr_communication.start();
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-
-
+        async_interact.execute();
     }
 
 

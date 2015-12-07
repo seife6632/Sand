@@ -6,7 +6,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import company.kr.sand.R;
-import company.kr.sand.rsibal.MainActivity;
+import company.kr.sand.views.MainActivity;
 
 /**
  * Created by Prattler on 2015-10-28.
@@ -23,11 +23,12 @@ public class IntroActivity extends Activity {
 
                 Thread.sleep(2500);
 
-                SharedPreferences mPref = getSharedPreferences("ID", MODE_PRIVATE);
-                String temp_facebook = mPref.getString("FaceBook", null);
-                String temp_naver = mPref.getString("Naver", null);
 
-                if (temp_facebook == null && temp_naver == null) {
+                SharedPreferences mPref = getSharedPreferences("ID", MODE_PRIVATE);
+                String temp_remain = mPref.getString("remain", null);
+
+                //temp_remain=null;
+                if (temp_remain==null) {
 
                     it_next = new Intent(IntroActivity.this, LoginActivity.class);
                     startActivity(it_next);

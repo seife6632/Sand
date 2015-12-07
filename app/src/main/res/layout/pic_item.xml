@@ -6,7 +6,7 @@
     android:orientation="vertical" >
 
 
-    <company.kr.sand.rsibal.PicImageView
+    <company.kr.sand.views.PicImageView
         android:id="@+id/picImage1"
         android:layout_width="fill_parent"
         android:layout_height="90dp"

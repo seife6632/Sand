@@ -1,4 +1,4 @@
-package company.kr.sand.rsibal;
+package company.kr.sand.views;
 
 import android.app.Activity;
 

@@ -1,4 +1,4 @@
-package company.kr.sand.rsibal;
+package company.kr.sand.views;
 
 /**
  * Created by User on 2015-11-01.

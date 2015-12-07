@@ -9,7 +9,7 @@
         android:allowBackup="true"
         android:icon="@drawable/icon"
         android:label="@string/app_name"
-        android:theme="@style/AppTheme">
+        android:theme="@style/MyTheme">
 
 
         <!-- 검색을 위한 meta data-->
@@ -23,10 +23,12 @@
             android:value="@string/facebook_app_id" />
 
         <!--GridView에서 Item 클릭시 보여지는 화면-->
-        <activity android:name=".rsibal.GridImageActivity" />
+        <activity android:name=".views.GridImageActivity" />
+
+        <!--GridView에서 Item 클릭시 보여지는 화면-->
 
         <!--화면상단의 Search바-->
-        <activity android:name="company.kr.sand.rsibal.Search">
+        <activity android:name="company.kr.sand.views.Search">
 
             <intent-filter>
 
@@ -42,8 +44,10 @@
 
         <!--홈피드화면-->
         <activity
-            android:name="company.kr.sand.rsibal.MainActivity"
-            android:label="@string/app_name">
+            android:name="company.kr.sand.views.MainActivity"
+            android:label="@string/app_name"
+            android:screenOrientation="portrait"
+            >
         </activity>
 
 
@@ -59,7 +63,15 @@
         <activity
             android:name=".registration.IntroActivity"
             android:noHistory="true"
-            android:screenOrientation="portrait" />
+            android:screenOrientation="portrait" >
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+
+        </activity>
 
         <!--로그인 화면-->
         <activity
@@ -67,18 +79,11 @@
             android:launchMode="standard"
             android:noHistory="false"
             android:screenOrientation="portrait">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+
 
         </activity>
 
         <!--삭제 예정-->
-        <activity
-            android:name=".registration.SNSActivity"
-            android:noHistory="true"
-            android:screenOrientation="portrait" />
 
         <!-- 네이버 로그인 화면 -->
         <activity

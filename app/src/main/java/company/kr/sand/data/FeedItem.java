@@ -7,13 +7,13 @@ import java.io.Serializable;
  */
 public class FeedItem implements Serializable {
     private int id;
-    private String name, status, image, profilePic, timeStamp, url;
+    private String name, status, image, profilePic, timeStamp, taste, quantity,  performance;
 
     public FeedItem() {
     }
 
     public FeedItem(int id, String name, String image, String status,
-                    String profilePic, String timeStamp, String url) {
+                    String profilePic, String timeStamp, String taste, String quantity, String performance) {
         super();
         this.id = id;
         this.name = name;
@@ -21,7 +21,9 @@ public class FeedItem implements Serializable {
         this.status = status;
         this.profilePic = profilePic;
         this.timeStamp = timeStamp;
-        this.url = url;
+        this.taste = taste;
+        this.quantity = quantity;
+        this.performance = performance;
     }
 
     public int getId() {
@@ -72,11 +74,19 @@ public class FeedItem implements Serializable {
         this.timeStamp = timeStamp;
     }
 
-    public String getUrl() {
-        return url;
+    public String getTaste() {
+        return taste;
     }
 
-    public void setUrl(String url) {
-        this.url = url;
+    public void setTaste(String taste) {
+        this.taste = taste;
     }
+
+    public String getQuantity() { return quantity; }
+
+    public void setQuantity(String quantity) { this.quantity = quantity;  }
+
+    public String getPerformance() { return performance; }
+
+    public void setPerformance(String performance) { this.performance = performance;  }
 }

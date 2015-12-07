@@ -1,81 +1,62 @@
-package company.kr.sand.adapter;
+package company.kr.sand.views;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
+import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.NetworkImageView;
-import company.kr.sand.views.FeedImageView;
 
+import company.kr.sand.R;
 import company.kr.sand.controller.AppController;
 import company.kr.sand.data.FeedItem;
-import company.kr.sand.R;
 
-import java.util.List;
+import java.util.ArrayList;
 
 /**
- * Created by User on 2015-11-01.
+ * Created by User on 2015-11-12.
  */
-public class FeedListAdapter extends BaseAdapter {
-    private Activity activity;
-    private LayoutInflater inflater;
-    private List<FeedItem> feedItems;
-    ImageLoader imageLoader = AppController.getInstance().getImageLoader();
+public class GridImageActivity extends Activity {
 
-    public FeedListAdapter(Activity activity, List<FeedItem> feedItems) {
-        this.activity = activity;
-        this.feedItems = feedItems;
-    }
+    private Context mContext;
+    private ImageLoader mImageLoader;
+    private ArrayList<FeedItem> feed;
+    private Button btn_reply;
+    private FeedItem item;
 
     @Override
-    public int getCount() {
-        return feedItems.size();
-    }
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.feed_item);
+        mContext=getApplicationContext();
 
-    @Override
-    public Object getItem(int location) {
-        return feedItems.get(location);
-    }
+        mImageLoader = AppController.getInstance().getImageLoader();
 
-    @Override
-    public long getItemId(int position) {
-        return position;
-    }
+        // get intent data
+        Intent i = getIntent();
 
-    @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
+        // Selected image id
+        int position = i.getExtras().getInt("position");
+        feed = (ArrayList<FeedItem>) i.getSerializableExtra("imagelist");
+        item = feed.get(position);
 
-        if (inflater == null)
-            inflater = (LayoutInflater) activity
-                    .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        if (convertView == null)
-            convertView = inflater.inflate(R.layout.feed_item, null);
-
-        if (imageLoader == null)
-            imageLoader = AppController.getInstance().getImageLoader();
-
-        TextView name = (TextView) convertView.findViewById(R.id.name);
-        TextView timestamp = (TextView) convertView
-                .findViewById(R.id.timestamp);
-        TextView statusMsg = (TextView) convertView
-                .findViewById(R.id.txtStatusMsg);
-        TextView url = (TextView) convertView.findViewById(R.id.txtUrl);
-        NetworkImageView profilePic = (NetworkImageView) convertView
-                .findViewById(R.id.profilePic);
-        FeedImageView feedImageView = (FeedImageView) convertView
-                .findViewById(R.id.feedImage1);
-
-        FeedItem item = feedItems.get(position);
+        TextView name = (TextView) findViewById(R.id.name);
+        TextView timestamp = (TextView) findViewById(R.id.timestamp);
+        TextView statusMsg = (TextView) findViewById(R.id.txtStatusMsg);
+        TextView url = (TextView) findViewById(R.id.txtUrl);
+        NetworkImageView profilePic = (NetworkImageView) findViewById(R.id.profilePic);
+        FeedImageView feedImageView = (FeedImageView) findViewById(R.id.feedImage1);
 
         name.setText(item.getName());
+
+        setReplyBtn();
 
         // Converting timestamp into x ago format
 //        CharSequence timeAgo = DateUtils.getRelativeTimeSpanString(
@@ -93,7 +74,7 @@ public class FeedListAdapter extends BaseAdapter {
         }
 
         // Checking for taste
-        ImageView img_taste = (ImageView) convertView.findViewById(R.id.taste);
+        ImageView img_taste = (ImageView) findViewById(R.id.taste);
         String taste = item.getTaste();
         Log.d("asdf", "taste = " + taste);
         switch(taste) {
@@ -109,7 +90,7 @@ public class FeedListAdapter extends BaseAdapter {
         }
 
         // Checking for quantity
-        ImageView img_quantity = (ImageView) convertView.findViewById(R.id.quantity);
+        ImageView img_quantity = (ImageView) findViewById(R.id.quantity);
         String quantity = item.getQuantity();
         //Log.d("asdf", "taste = " + taste);
         switch(taste) {
@@ -125,7 +106,7 @@ public class FeedListAdapter extends BaseAdapter {
         }
 
         // Checking for performance
-        ImageView img_performance = (ImageView) convertView.findViewById(R.id.performance);
+        ImageView img_performance = (ImageView) findViewById(R.id.performance);
         String performance = item.getPerformance();
         //Log.d("asdf", "taste = " + taste);
         switch(performance) {
@@ -140,14 +121,21 @@ public class FeedListAdapter extends BaseAdapter {
                 break;
         }
 
-        ImageView img_follow = (ImageView) convertView.findViewById(R.id.follow);
+        ImageView img_follow = (ImageView) findViewById(R.id.follow);
+        img_follow.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // do follow sql work
+            }
+        });
+
 
         // user profile pic
-        profilePic.setImageUrl(item.getProfilePic(), imageLoader);
+        profilePic.setImageUrl(item.getProfilePic(), mImageLoader);
 
         // Feed image
         if (item.getImge() != null) {
-            feedImageView.setImageUrl(item.getImge(), imageLoader);
+            feedImageView.setImageUrl(item.getImge(), mImageLoader);
             feedImageView.setVisibility(View.VISIBLE);
             feedImageView
                     .setResponseObserver(new FeedImageView.ResponseObserver() {
@@ -163,7 +151,22 @@ public class FeedListAdapter extends BaseAdapter {
             feedImageView.setVisibility(View.GONE);
         }
 
-        return convertView;
     }
 
+    private void setReplyBtn(){
+
+        btn_reply=(Button)findViewById(R.id.btn_reply);
+        btn_reply.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+//                Dialog dialog=new Dialog(GridImageActivity.this);
+//                dialog.setContentView(R.layout.reply_dialog);
+//                dialog.show();
+
+                new ReplyDialog(GridImageActivity.this,item, mContext.getSharedPreferences("ID",MODE_PRIVATE).getString("remain",null)).show();
+
+            }
+        });
+    }
 }

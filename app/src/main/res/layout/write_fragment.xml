@@ -75,7 +75,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Taste"
+                                android:text="맛"
                                 android:id="@+id/textView"
                                 android:layout_alignParentBottom="true"
                                 android:layout_alignParentLeft="true"
@@ -92,23 +92,31 @@
                                 android:id="@+id/rg_taste">
 
                                 <RadioButton
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
+                                    android:layout_width="34dp"
+                                    android:layout_height="34dp"
                                     android:id="@+id/btn_taste_low"
-                                    android:checked="false" />
-
-                                <RadioButton
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:id="@+id/btn_taste_middle"
                                     android:checked="false"
-                                    />
+                                    android:button="@null"
+                                    android:background="@drawable/smile_0_selector"
+                                    android:layout_marginRight="5dp" />
 
                                 <RadioButton
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
+                                    android:layout_width="34dp"
+                                    android:layout_height="34dp"
+                                    android:id="@+id/btn_taste_middle"
+                                    android:button="@null"
+                                    android:checked="false"
+                                    android:background="@drawable/smile_1_selector"
+                                    android:layout_marginRight="5dp" />
+
+                                <RadioButton
+                                    android:layout_width="34dp"
+                                    android:layout_height="34dp"
                                     android:id="@+id/btn_taste_high"
-                                    android:checked="true" />
+                                    android:button="@null"
+                                    android:checked="true"
+                                    android:background="@drawable/smile_2_selector"
+                                    android:layout_marginRight="5dp" />
 
 
 
@@ -124,7 +132,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Quantity"
+                                android:text="양"
                                 android:id="@+id/textView2"
                                 android:layout_alignParentBottom="true"
                                 android:layout_alignParentLeft="true"
@@ -141,24 +149,33 @@
                                 android:id="@+id/rg_quantity">
 
                                 <RadioButton
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
+                                    android:layout_width="34dp"
+                                    android:layout_height="34dp"
                                     android:id="@+id/btn_quantity_low"
                                     android:checked="false"
-                                    />
+                                    android:button="@null"
+                                    android:layout_marginRight="5dp"
+                                    android:background="@drawable/smile_0_selector" />
 
                                 <RadioButton
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
+                                    android:layout_width="34dp"
+                                    android:layout_height="34dp"
                                     android:id="@+id/btn_quantity_middle"
                                     android:checked="false"
-                                    />
+                                    android:button="@null"
+
+                                    android:layout_marginRight="5dp"
+                                    android:background="@drawable/smile_1_selector" />
 
                                 <RadioButton
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
+                                    android:layout_width="34dp"
+                                    android:layout_height="34dp"
                                     android:id="@+id/btn_quantity_high"
-                                    android:checked="true" />
+                                    android:checked="true"
+
+                                    android:button="@null"
+                                    android:layout_marginRight="5dp"
+                                    android:background="@drawable/smile_2_selector" />
 
 
 
@@ -174,7 +191,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Performance"
+                                android:text="가성비"
                                 android:id="@+id/textView3"
                                 android:layout_alignParentBottom="true"
                                 android:layout_alignParentLeft="true"
@@ -191,24 +208,31 @@
                                 android:id="@+id/rg_performance">
 
                                 <RadioButton
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
+                                    android:layout_width="34dp"
+                                    android:layout_height="34dp"
                                     android:id="@+id/btn_peformance_low"
                                     android:checked="false"
-                                    />
+                                    android:button="@null"
+                                    android:layout_marginRight="5dp"
+                                    android:background="@drawable/smile_0_selector" />
 
                                 <RadioButton
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
+                                    android:layout_width="34dp"
+                                    android:layout_height="34dp"
                                     android:id="@+id/btn_performance_middle"
                                     android:checked="false"
-                                    />
+                                    android:button="@null"
+                                    android:layout_marginRight="5dp"
+                                    android:background="@drawable/smile_1_selector" />
 
                                 <RadioButton
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
+                                    android:layout_width="34dp"
+                                    android:layout_height="34dp"
                                     android:id="@+id/btn_performance_high"
-                                    android:checked="true" />
+                                    android:checked="true"
+                                    android:button="@null"
+                                    android:layout_marginRight="5dp"
+                                    android:background="@drawable/smile_2_selector" />
 
 
 
@@ -232,7 +256,7 @@
                             android:id="@+id/editText"
                             android:minLines="4"
                             android:maxLines="4"
-                            android:hint="Input your text"
+                            android:hint="내용을 적어주세요"
                             android:background="@android:color/transparent"
                             android:layout_centerVertical="true"
                             android:layout_alignParentLeft="true"

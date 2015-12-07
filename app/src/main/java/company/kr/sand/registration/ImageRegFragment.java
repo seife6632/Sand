@@ -28,6 +28,7 @@ public class ImageRegFragment extends Fragment {
 
     public static final int REQUEST_CODE_IMAGE=0;
 
+    String imgPath=null;
     Button btn_image_reg;
     Button btn_next_image;
     RelativeLayout profile_image_back;
@@ -61,7 +62,7 @@ public class ImageRegFragment extends Fragment {
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
 
-        System.out.println(requestCode);
+        //System.out.println(requestCode);
 
 
         if (requestCode==196608 && resultCode == activity.RESULT_OK && data != null) {
@@ -72,6 +73,8 @@ public class ImageRegFragment extends Fragment {
 
             imageCursor.moveToFirst();
 
+            imgPath=imageCursor.getString(imageCursor.getColumnIndex(MediaStore.Images.Media.DATA));
+
             final int columnIndex = imageCursor.getColumnIndex(filePathColumn[0]);
             final String imagePath = imageCursor.getString(columnIndex);
 
@@ -80,5 +83,10 @@ public class ImageRegFragment extends Fragment {
             Drawable back_drawable = new BitmapDrawable(getResources(), bitmap);
             profile_image_back.setBackground(back_drawable);
         }
+    }
+
+    public String getImgPath(){
+
+        return imgPath;
     }
 }

@@ -9,7 +9,7 @@ import android.widget.BaseAdapter;
 
 import com.android.volley.toolbox.ImageLoader;
 
-import company.kr.sand.rsibal.PicImageView;
+import company.kr.sand.views.PicImageView;
 import company.kr.sand.R;
 import company.kr.sand.controller.AppController;
 import company.kr.sand.data.FeedItem;
